@@ -1,38 +1,39 @@
 name: Android Build
+
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/mobile/apps/consumer/**'
+      - '.github/workflows/android-build.yml'
   workflow_dispatch:
 
 jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/mobile/apps/consumer
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+          node-version: '18'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install Dependencies
-        working-directory: ./src/mobile
-        run: npm ci --legacy-peer-deps
+        run: npm install
 
       - name: Build APK
-        working-directory: ./src/mobile/apps/consumer/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          npx expo prebuild --platform android
+          cd android && ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
